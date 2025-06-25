@@ -233,18 +233,18 @@ workflows:
           <<: *feature-branch-job
           <<: *notify-fail
       
-      # - run-tests-and-sonar-scan:
-      #     name: unit-test-and-sonarqube-dev
-      #     aws-id: "799269618777"
-      #     requires:
-      #       - push-image-ecr-dev
-      #     context:
-      #       - aws
-      #       - sonarqube
-      #       - github
-      #       - slack-circleci-bot
-      #     <<: *feature-branch-job
-      #     <<: *notify-fail
+      - run-tests-and-sonar-scan:
+          name: unit-test-and-sonarqube-dev
+          aws-id: "799269618777"
+          requires:
+            - push-image-ecr-dev
+          context:
+            - aws
+            - sonarqube
+            - github
+            - slack-circleci-bot
+          <<: *feature-branch-job
+          <<: *notify-fail
 
       # - update-imagetag:
       #     name: update-imagetag-dev
