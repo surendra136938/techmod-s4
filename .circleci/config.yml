@@ -79,7 +79,6 @@ executors:
       docker_layer_caching: true
 
 jobs:
-
   run-tests-and-sonar-scan:
     description: "Run unit tests on created docker image and run sonar scan"
     executor: linux-vm
@@ -137,6 +136,11 @@ jobs:
           export-proxy-variables: http
       - attach_workspace:
           at: .
+      - run:
+          name: list files in workspace
+          command: |
+            echo "Listing files in workspace:"
+            ls -la .
       - run:
           name: Set custom environment variable with date-time
           command: |
