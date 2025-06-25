@@ -103,12 +103,12 @@ jobs:
           command: |
             CUSTOM_TAG=$(cat /tmp/custom_tag)
             echo "export CUSTOM_TAG=${CUSTOM_TAG}" >> $BASH_ENV
-      # - run:
-      #     command: |
-      #       IMAGE=<<parameters.aws-id>>.dkr.ecr.us-west-2.amazonaws.com/sdsread/ir-data-science-integration:${CUSTOM_TAG}
-      #       echo aws-id : <<parameters.aws-id>>
-      #       echo ${CIRCLE_SHA1:0:8}
-      #       echo $IMAGE
+      - run:
+          command: |
+            IMAGE=<<parameters.aws-id>>.dkr.ecr.us-west-2.amazonaws.com/sdsread/ir-data-science-integration:${CUSTOM_TAG}
+            echo aws-id : <<parameters.aws-id>>
+            echo ${CIRCLE_SHA1:0:8}
+            echo $IMAGE
       #       docker pull $IMAGE
       #       echo "Running unit tests"
       #       docker run -it --user root $IMAGE bash -c "./run_tests.sh"
