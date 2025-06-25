@@ -15,7 +15,7 @@ RUN adduser --disabled-password --gecos "" user
 # Install tools
 RUN pip3 install --upgrade pip; \
     pip3 install -r requirements.txt -t /app; \
-    # pip3 install coverage
+# RUN pip3 install coverage
 RUN chown -R user:user /app
 # RUN chmod +x ./run_tests.sh
 USER user
