@@ -231,7 +231,7 @@ workflows:
           name: push-image-ecr-dev
           context: [aws, slack-circleci-bot]  
           <<: *feature-branch-job
-          <<: *notify-fail
+          <<: *notify-success-and-fail
       
       - run-tests-and-sonar-scan:
           name: unit-test-and-sonarqube-dev
@@ -244,7 +244,7 @@ workflows:
             - github
             - slack-circleci-bot
           <<: *feature-branch-job
-          <<: *notify-fail
+          <<: *notify-success-and-fail
 
       # - update-imagetag:
       #     name: update-imagetag-dev
