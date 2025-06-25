@@ -13,9 +13,13 @@ RUN apt-get update && apt-get install -y \
 RUN adduser --disabled-password --gecos "" user
 
 # Install tools
-RUN pip3 install --upgrade pip; \
-    pip3 install -r requirements.txt -t /app; \
+RUN pip3 install --upgrade pip && \
+    pip3 install -r requirements.txt -t /app
+
+# Optional: install coverage (commented out)
 # RUN pip3 install coverage
+
+# Change ownership
 RUN chown -R user:user /app
 # RUN chmod +x ./run_tests.sh
 USER user
