@@ -6,9 +6,13 @@ from app.spamfilters.spamfilterfactory import SpamFilterFactory
 from app.spamfilters.spamfilterinterface import SpamFilterInterface
 from app.spamfilters.farspamfilter import FARSpamFilter
 from app.services.lcsservice import LCSService
+from app.routes import include_routers
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
+
+# Include all routers
+include_routers(app)
 
 # --------------------
 # Endpoint: /detect_spam
@@ -120,3 +124,4 @@ async def resubmit_lead(request: Request):
     except Exception as e:
         logging.error(f"Error during lead resubmission: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+

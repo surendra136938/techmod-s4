@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from app.spamfilters.spamfilterinterface import SpamFilterInterface
-from app.db.spams_dao import SpamsDAO
+from app.dao.spamdao import SpamDAO
 from app.spamfilters.normalize_email import NormalizeEmail
 
 

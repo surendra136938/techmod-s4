@@ -35,14 +35,14 @@ path_svc_common = os.path.join(path_svc_root, "common")
 path_services = os.path.join(path_svc_root, "services")
 
 # Database configuration
-db_host = os.getenv("DB_HOST")
-db_user = os.getenv("DB_USER")
-db_password = os.getenv("DB_PASSWORD")
-database_name = "instrumentation"
-s4_database_name = os.getenv("S4_DB")
+db_host = os.getenv("DB_HOST", "s4-postgresql-dev-test.cnq78cujpibv.us-west-2.rds.amazonaws.com")
+db_user = os.getenv("DB_USER","postgres")
+db_password = os.getenv("DB_PASSWORD","postgres2")
+database_name = "leadspam"
+s4_database_name = os.getenv("S4_DATABASE_NAME", "leadspam")
 
 # Cache configuration
-cache_enabled = True
+cache_enabled = False
 cache_host = os.getenv("CACHE_HOST")
 cache_host_port = os.getenv("CACHE_HOST_PORT", "6379")
 
