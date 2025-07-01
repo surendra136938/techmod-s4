@@ -1,13 +1,20 @@
+from typing import Dict, Any
 from app.spamfilters.spamfilter import SpamFilter
 from app.spamfilters.spamfilterinterface import SpamFilterInterface
 import logging
 
 class FARSpamFilter(SpamFilter):
-    def __init__(self, lead_type):
+    def __init__(self, lead_type: str) -> None:
+        """
+        Initializes FAR (Find A Realtor) spam filter with specified lead type.
+        """
         logging.info("calling FARSpamFilter()")
         super().__init__(lead_type)
 
-    def filter(self, lead_payload):
+    def filter(self, lead_payload: Dict[str, Any]) -> str:
+        """
+        Filters FAR lead payload using simplified spam detection rules.
+        """
         detection_result = SpamFilterInterface.NOT_SPAM
 
         self.parse_lead_payload(lead_payload)

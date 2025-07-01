@@ -1,9 +1,25 @@
+import redis
+import pickle
+from typing import Optional, List, Dict, Any, Union
 from app.dao.pgsqldao import PgSqlDAO
 from app.services.moveservice import MoveService
-from app.spamfilters.spamfilter import SpamFilter
+from app.spamfilters.spamfilterinterface import SpamFilterInterface
 
 class SpamDAO:
-    def __init__(self, db_host=None, db_user=None, db_password=None, s4_database_name=None, db_port=5432, cache_enabled=False, cache_host=None, cache_host_port=None):
+    """Data access object for spam detection operations with PostgreSQL and Redis caching."""
+    
+    def __init__(
+        self, 
+        db_host: Optional[str] = None, 
+        db_user: Optional[str] = None, 
+        db_password: Optional[str] = None, 
+        s4_database_name: Optional[str] = None, 
+        db_port: int = 5432, 
+        cache_enabled: bool = False, 
+        cache_host: Optional[str] = None, 
+        cache_host_port: Optional[str] = None
+    ) -> None:
+        """Initialize SpamDAO with database and optional Redis cache configuration."""
         self.pgsqlDao = PgSqlDAO(db_host, db_user, db_password, s4_database_name, db_port)
         self.cacheInstance = None
 
@@ -117,7 +133,8 @@ class SpamDAO:
     SUSPECTED_PHONE_CACHE_TTL = 300
     SUSPECTED_EMAIL_CACHE_TTL = 300
     S4_CONFIG_CACHE_TTL = 3600
-    def get_bad_words_list(self, use_cache=None):
+    def get_bad_words_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of bad words with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -146,16 +163,19 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_BAD_WORDS_LIST)
         return result
 
-    def add_to_bad_words_list(self, text, type_):
+    def add_to_bad_words_list(self, text: str, type_: str) -> None:
+        """Add a new bad word to the bad words list."""
         params = (text, type_)
         self.pgsqlDao.insert(self.INSERT_BAD_WORD_TO_BAD_WORD_LIST, params)
 
-    def delete_bad_word(self, id_):
+    def delete_bad_word(self, id_: int) -> Any:
+        """Delete a bad word by its ID."""
         params = (id_,)
         result = self.pgsqlDao.delete(self.DELETE_BAD_WORD, params)
         return result
 
-    def get_black_phone_list(self, use_cache=None):
+    def get_black_phone_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of blacklisted phone numbers with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -183,7 +203,8 @@ class SpamDAO:
         else:
             result = self.pgsqlDao.get(self.GET_BLACK_PHONE_LIST)
         return result
-    def get_rule_type_list(self, use_cache=None):
+    def get_rule_type_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of rule types with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -212,16 +233,19 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_RULE_TYPE_LIST)
         return result
 
-    def add_to_black_phone_list(self, black_phone):
+    def add_to_black_phone_list(self, black_phone: str) -> None:
+        """Add a phone number to the blacklist."""
         params = (black_phone,)
         self.pgsqlDao.insert(self.INSERT_BLACK_PHONE_LIST, params)
 
-    def delete_black_phone_list(self, phone):
+    def delete_black_phone_list(self, phone: str) -> Any:
+        """Remove a phone number from the blacklist."""
         params = (phone,)
         result = self.pgsqlDao.delete(self.DELETE_BLACK_PHONE, params)
         return result
 
-    def get_suspected_phone_list(self, use_cache=None):
+    def get_suspected_phone_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of suspected phone numbers with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -258,7 +282,8 @@ class SpamDAO:
     #     result = self.pgsqlDao.delete(self.DELETE_SUSPECTED_PHONE, params)
     #     return result
 
-    def get_pattern_email_list(self, use_cache=None):
+    def get_pattern_email_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of pattern emails with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -287,7 +312,8 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_PATTERN_EMAIL_LIST)
         return result
 
-    def get_black_email_list(self, use_cache=None):
+    def get_black_email_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of blacklisted emails with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -315,7 +341,8 @@ class SpamDAO:
         else:
             result = self.pgsqlDao.get(self.GET_BLACK_EMAIL_LIST)
         return result
-    def get_blacklist_ip(self, use_cache=None):
+    def get_blacklist_ip(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of blacklisted IP addresses with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -344,7 +371,8 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_BLACKLIST_IP)
         return result
 
-    def get_whitelisted_url_list(self, use_cache=None):
+    def get_whitelisted_url_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of whitelisted URLs with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -373,7 +401,8 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_WHITELISTED_URL_LIST)
         return result
 
-    def get_lead_weights(self, use_cache=None):
+    def get_lead_weights(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve lead weights configuration with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -401,7 +430,8 @@ class SpamDAO:
         else:
             result = self.pgsqlDao.get(self.GET_WEIGHTS)
         return result
-    def get_algorithm_config(self, use_cache=None):
+    def get_algorithm_config(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve algorithm configuration with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -430,23 +460,27 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_ALGORITHM_CONFIG)
         return result
 
-    def get_single_algorithm_config(self, id_):
+    def get_single_algorithm_config(self, id_: int) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve a single algorithm configuration by ID."""
         params = (id_,)
         result = self.pgsqlDao.get(self.GET_SINGLE_ALGORITHM_CONFIG, params)
         return result
 
-    def get_domain_id(self, name):
+    def get_domain_id(self, name: str) -> int:
+        """Get domain ID by domain name."""
         params = (name,)
         result = self.pgsqlDao.get(self.GET_DOMAIN_ID, params)
         result = result[0]['id']
         return result
 
-    def get_pending_review(self):
+    def get_pending_review(self) -> List[str]:
+        """Get list of pending review IDs."""
         pending_id = self.pgsqlDao.get(self.GET_PENDING_REVIEW)
         pending_id_list = [row['id'] for row in pending_id]
         return pending_id_list
 
-    def get_whitelisted_ip(self, use_cache=None):
+    def get_whitelisted_ip(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of whitelisted IP addresses with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -474,7 +508,8 @@ class SpamDAO:
         else:
             result = self.pgsqlDao.get(self.GET_WHITELISTED_IP)
         return result
-    def get_whitelisted_phone(self, use_cache=None):
+    def get_whitelisted_phone(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of whitelisted phone numbers with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -503,7 +538,8 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_WHITELISTED_PHONE)
         return result
 
-    def get_white_email_list(self, use_cache=None):
+    def get_white_email_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of whitelisted emails with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -532,77 +568,93 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_WHITE_EMAIL_LIST)
         return result
 
-    def add_to_pattern_email_list(self, sender_email):
+    def add_to_pattern_email_list(self, sender_email: str) -> None:
+        """Add an email to the pattern email list."""
         params = (sender_email,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_PATTERN_EMAIL_LIST, params)
 
-    def add_to_black_email_lsit(self, sender_email):
+    def add_to_black_email_lsit(self, sender_email: str) -> None:
+        """Add an email to the blacklist."""
         params = (sender_email,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_BLACK_EMAIL_LIST, params)
 
-    def add_to_black_ip_list(self, sender_ip):
+    def add_to_black_ip_list(self, sender_ip: str) -> None:
+        """Add an IP address to the blacklist."""
         params = (sender_ip,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_BLACKLIST_IP, params)
     # def add_to_lead_weight_list(self, lead_type, weight):
     #     params = (lead_type, weight)
     #     self.pgsqlDao.insert(self.INSERT_TO_LEAD_WEIGHT_LIST, params)
 
-    def delete_algorithm_config(self, id_):
+    def delete_algorithm_config(self, id_: int) -> Any:
+        """Delete an algorithm configuration by ID."""
         params = (id_,)
         result = self.pgsqlDao.delete(self.DELETE_ALGORITHM_CONFIG, params)
         return result
 
-    def delete_black_ip(self, ip):
+    def delete_black_ip(self, ip: str) -> Any:
+        """Remove an IP address from the blacklist."""
         params = (ip,)
         result = self.pgsqlDao.delete(self.DELETE_BLACKLISTED_IP, params)
         return result
 
-    def delete_pattern_email(self, email):
+    def delete_pattern_email(self, email: str) -> Any:
+        """Remove an email from the pattern email list."""
         params = (email,)
         result = self.pgsqlDao.delete(self.DELETE_PATTERN_EMAIL, params)
         return result
 
-    def delete_black_email(self, email):
+    def delete_black_email(self, email: str) -> Any:
+        """Remove an email from the blacklist."""
         params = (email,)
         result = self.pgsqlDao.delete(self.DELETE_BLACK_EMAIL, params)
         return result
 
-    def add_to_white_email_lsit(self, sender_email):
+    def add_to_white_email_lsit(self, sender_email: str) -> None:
+        """Add an email to the whitelist."""
         params = (sender_email,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_WHITE_EMAIL_LIST, params)
 
-    def add_to_whitelisted_ip(self, sender_ip):
+    def add_to_whitelisted_ip(self, sender_ip: str) -> None:
+        """Add an IP address to the whitelist."""
         params = (sender_ip,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_WHITELISTED_IP, params)
 
-    def add_to_whitelisted_phone(self, sender_phone):
+    def add_to_whitelisted_phone(self, sender_phone: str) -> None:
+        """Add a phone number to the whitelist."""
         params = (sender_phone,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_WHITELISTED_PHONE, params)
 
-    def delete_whitelisted_ip(self, ip):
+    def delete_whitelisted_ip(self, ip: str) -> Any:
+        """Remove an IP address from the whitelist."""
         params = (ip,)
         result = self.pgsqlDao.delete(self.DELETE_WHITE_IP, params)
         return result
 
-    def delete_whitelisted_phone(self, phone):
+    def delete_whitelisted_phone(self, phone: str) -> Any:
+        """Remove a phone number from the whitelist."""
         params = (phone,)
         result = self.pgsqlDao.delete(self.DELETE_WHITE_PHONE, params)
         return result
 
-    def delete_white_email(self, email):
+    def delete_white_email(self, email: str) -> Any:
+        """Remove an email from the whitelist."""
         params = (email,)
         result = self.pgsqlDao.delete(self.DELETE_WHITE_EMAIL, params)
         return result
 
-    def add_to_whitelisted_url_list(self, sender_url):
+    def add_to_whitelisted_url_list(self, sender_url: str) -> None:
+        """Add a URL to the whitelist."""
         params = (sender_url,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_WHITELISTED_URL_LIST, params)
 
-    def delete_whitelisted_url(self, url):
+    def delete_whitelisted_url(self, url: str) -> Any:
+        """Remove a URL from the whitelist."""
         params = (url,)
         result = self.pgsqlDao.delete(self.DELETE_WHITELISTED_URL, params)
         return result
-    def get_suspected_email_list(self, use_cache=None):
+    def get_suspected_email_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of suspected emails with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -631,7 +683,8 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_SUSPECTED_EMAIL_LIST)
         return result
 
-    def get_suspected_ip_list(self, use_cache=None):
+    def get_suspected_ip_list(self, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Retrieve list of suspected IP addresses with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -659,53 +712,63 @@ class SpamDAO:
         else:
             result = self.pgsqlDao.get(self.GET_SUSPECTED_IP_LIST)
         return result
-    def add_to_suspected_email_lsit(self, sender_email):
+    def add_to_suspected_email_lsit(self, sender_email: str) -> None:
+        """Add an email to the suspected emails list."""
         params = (sender_email,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_SUSPECTED_EMAIL_LIST, params)
 
-    def add_to_suspected_ip_list(self, sender_ip):
+    def add_to_suspected_ip_list(self, sender_ip: str) -> None:
+        """Add an IP address to the suspected IPs list."""
         params = (sender_ip,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_SUSPECTED_IP_LIST, params)
 
-    def add_to_suspected_phone_list(self, sender_phone):
+    def add_to_suspected_phone_list(self, sender_phone: str) -> None:
+        """Add a phone number to the suspected phones list."""
         params = (sender_phone,)
         self.pgsqlDao.insert(self.INSERT_SENDER_TO_SUSPECTED_PHONE_LIST, params)
 
-    def delete_suspected_email(self, email):
+    def delete_suspected_email(self, email: str) -> Any:
+        """Remove an email from the suspected emails list."""
         params = (email,)
         result = self.pgsqlDao.delete(self.DELETE_SUSPECTED_EMAIL, params)
         return result
 
-    def delete_suspected_ip(self, ip):
+    def delete_suspected_ip(self, ip: str) -> Any:
+        """Remove an IP address from the suspected IPs list."""
         params = (ip,)
         result = self.pgsqlDao.delete(self.DELETE_SUSPECTED_IP, params)
         return result
 
-    def delete_suspected_phone_list(self, ip):
+    def delete_suspected_phone_list(self, ip: str) -> Any:
+        """Remove a phone number from the suspected phones list."""
         params = (ip,)
         result = self.pgsqlDao.delete(self.DELETE_SUSPECTED_PHONE, params)
         return result
 
-    def add_to_review_queue(self, id_, payload):
+    def add_to_review_queue(self, id_: str, payload: str) -> None:
+        """Add a lead to the review queue with pending status."""
         from datetime import datetime, timezone, timedelta
         # America/Los_Angeles is UTC-8 or UTC-7 (with DST); using pytz is more accurate, but for now:
         import pytz
         la = pytz.timezone('America/Los_Angeles')
         current_utc_time = int(datetime.now(la).timestamp())
-        params = (id_, payload, SpamFilter.SPAM_REVIEW_PENDING, current_utc_time)
+        params = (id_, payload, SpamFilterInterface.SPAM_REVIEW_PENDING, current_utc_time)
         self.pgsqlDao.insert(self.INSERT_LEAD_TO_REVIEW_QUEUE, params)
 
-    def get_lead_from_review_queue(self, status):
+    def get_lead_from_review_queue(self, status: str) -> Optional[List[Dict[str, Any]]]:
+        """Get leads from review queue by status."""
         params = (status,)
         result = self.pgsqlDao.get(self.GET_LEAD_FROM_REVIEW_QUEUE, params)
         return result
 
-    def get_lead_from_review_queue_by_id(self, id_):
+    def get_lead_from_review_queue_by_id(self, id_: str) -> Optional[List[Dict[str, Any]]]:
+        """Get a specific lead from review queue by ID."""
         params = (id_,)
         result = self.pgsqlDao.get(self.GET_LEAD_FROM_REVIEW_QUEUE_BY_ID, params)
         return result
 
-    def update_pending_lead(self, id_, status, reason=None):
+    def update_pending_lead(self, id_: str, status: str, reason: Optional[str] = None) -> None:
+        """Update the status of a pending lead in the review queue."""
         from datetime import datetime
         import pytz
         la = pytz.timezone('America/Los_Angeles')
@@ -717,12 +780,14 @@ class SpamDAO:
             params = (status, current_utc_time, reason, id_)
             self.pgsqlDao.update(self.UPDATE_PENDING_LEAD, params)
 
-    def get_sender(self, sender_email):
+    def get_sender(self, sender_email: str) -> Optional[List[Dict[str, Any]]]:
+        """Get sender information by email address."""
         params = (sender_email,)
         result = self.pgsqlDao.get(self.GET_SENDER, params)
         return result
 
-    def get_rule_type_config(self, rule_type, use_cache=None):
+    def get_rule_type_config(self, rule_type: str, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Get algorithm configuration for a specific rule type with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
         params = (rule_type,)
@@ -757,17 +822,28 @@ class SpamDAO:
         else:
             result = self.pgsqlDao.get(self.GET_RULE_TYPE_ALGORITHM_CONFIG, params)
         return result
-    def get_sender_ip(self, sender_ip):
+    def get_sender_ip(self, sender_ip: str) -> Optional[List[Dict[str, Any]]]:
+        """Get sender information by IP address."""
         params = (sender_ip,)
         result = self.pgsqlDao.get(self.GET_SENDER_IP, params)
         return result
 
-    def get_sender_phone(self, sender_phone):
+    def get_sender_phone(self, sender_phone: str) -> Optional[List[Dict[str, Any]]]:
+        """Get sender information by phone number."""
         params = (sender_phone,)
         result = self.pgsqlDao.get(self.GET_SENDER_PHONE, params)
         return result
 
-    def save_or_update_sender(self, sender_email, sender_ip, lead_method, last_lead_submited_time_stamp, sender_exist, sender_phone):
+    def save_or_update_sender(
+        self, 
+        sender_email: str, 
+        sender_ip: str, 
+        lead_method: str, 
+        last_lead_submited_time_stamp: int, 
+        sender_exist: bool, 
+        sender_phone: str
+    ) -> None:
+        """Save a new sender or update an existing sender's timestamp."""
         if not sender_exist:
             params = (sender_email, sender_ip, lead_method, last_lead_submited_time_stamp, sender_phone)
             self.pgsqlDao.insert(self.INSERT_SENDER, params)
@@ -775,29 +851,35 @@ class SpamDAO:
             params = (last_lead_submited_time_stamp, sender_email)
             self.pgsqlDao.update(self.UPDATE_SENDER, params)
 
-    def add_to_algorithm_config(self, rule_type, lead_count, minute):
+    def add_to_algorithm_config(self, rule_type: str, lead_count: int, minute: int) -> None:
+        """Add a new algorithm configuration entry."""
         params = (rule_type, lead_count, minute)
         self.pgsqlDao.insert(self.INSERT_ALGORITHM_CONFIG, params)
 
-    def update_weight(self, weight, lead_type):
+    def update_weight(self, weight: float, lead_type: str) -> None:
+        """Update the weight for a specific lead type."""
         params = (weight, lead_type)
         self.pgsqlDao.update(self.UPDATE_WEIGHT, params)
 
-    def update_algorithm_config(self, id_, rule_type, lead_count, minute):
+    def update_algorithm_config(self, id_: int, rule_type: str, lead_count: int, minute: int) -> None:
+        """Update an existing algorithm configuration."""
         params = (rule_type, lead_count, minute, id_)
         self.pgsqlDao.update(self.UPDATE_ALGORITHM_CONFIG, params)
 
-    def delete_sender(self, sender_email, time):
+    def delete_sender(self, sender_email: str, time: int) -> Any:
+        """Delete sender records older than specified time."""
         params = (sender_email, time)
         result = self.pgsqlDao.delete(self.DELETE_SENDER, params)
         return result
 
-    def delete_sender_ip(self, sender_ip, time):
+    def delete_sender_ip(self, sender_ip: str, time: int) -> Any:
+        """Delete sender IP records older than specified time."""
         params = (sender_ip, time)
         result = self.pgsqlDao.delete(self.DELETE_SENDER_IP, params)
         return result
 
-    def delete_sender_phone(self, sender_phone, time):
+    def delete_sender_phone(self, sender_phone: str, time: int) -> Any:
+        """Delete sender phone records older than specified time."""
         params = (sender_phone, time)
         result = self.pgsqlDao.delete(self.DELETE_SENDER_PHONE, params)
         return result
@@ -820,11 +902,13 @@ class SpamDAO:
     #     result = self.pgsqlDao.delete(self.DELETE_PHONE_SENDER, params)
     #     return result
 
-    def get_senders_to_purage(self, purage_threshold_time):
+    def get_senders_to_purage(self, purage_threshold_time: int) -> Optional[List[Dict[str, Any]]]:
+        """Get senders to purge based on threshold time."""
         params = (purage_threshold_time,)
         result = self.pgsqlDao.get(self.GET_SENDER_TO_PURAGE, params)
         return result
-    def purge_sender_lists(self, purge_sql, email_list_str, last_lead_submited_time_stamp_list_str):
+    def purge_sender_lists(self, purge_sql: str, email_list_str: str, last_lead_submited_time_stamp_list_str: str) -> Any:
+        """Purge sender lists based on provided SQL and parameters."""
         email_list_str_token = email_list_str.split(',')
         time_stamp_list_str_token = last_lead_submited_time_stamp_list_str.split(',')
 
@@ -839,7 +923,8 @@ class SpamDAO:
         result = self.pgsqlDao.delete(purge_sql, tuple(params))
         return result
 
-    def get_s4_confg(self, name, lead_type, use_cache=None):
+    def get_s4_confg(self, name: str, lead_type: str, use_cache: Optional[Union[bool, str]] = None) -> Optional[List[Dict[str, Any]]]:
+        """Get S4 configuration value with optional Redis caching."""
         result = None
         cache_enabled = self.cacheInstance is not None
 
@@ -869,12 +954,14 @@ class SpamDAO:
             result = self.pgsqlDao.get(self.GET_S4_CONFIG, params)
         return result
 
-    def get_max_minute(self, rule_type):
+    def get_max_minute(self, rule_type: str) -> Optional[List[Dict[str, Any]]]:
+        """Get maximum minute value for a specific rule type."""
         params = (rule_type,)
         result = self.pgsqlDao.get(self.GET_MAX_MINUTE_ALGORITHM_CONFIG, params)
         return result
 
-    def get_lead_email_type_count(self, email, lead_method, current_time, time_in_sec):
+    def get_lead_email_type_count(self, email: str, lead_method: str, current_time: int, time_in_sec: int) -> int:
+        """Get count of leads for an email within a time window."""
         params = (email, lead_method, current_time, time_in_sec)
         result = self.pgsqlDao.get(self.GET_LEAD_EMAIL_TYPE_COUNT, params)
         value = 0
@@ -886,7 +973,8 @@ class SpamDAO:
                         break
         return int(value)
 
-    def get_lead_ip_type_count(self, ip, lead_method, current_time, time_in_sec):
+    def get_lead_ip_type_count(self, ip: str, lead_method: str, current_time: int, time_in_sec: int) -> int:
+        """Get count of leads for an IP address within a time window."""
         params = (ip, lead_method, current_time, time_in_sec)
         result = self.pgsqlDao.get(self.GET_LEAD_IP_TYPE_COUNT, params)
         value = 0
@@ -898,7 +986,8 @@ class SpamDAO:
                         break
         return int(value)
 
-    def get_lead_phone_type_count(self, phone, lead_method, current_time, time_in_sec):
+    def get_lead_phone_type_count(self, phone: str, lead_method: str, current_time: int, time_in_sec: int) -> int:
+        """Get count of leads for a phone number within a time window."""
         params = (phone, lead_method, current_time, time_in_sec)
         result = self.pgsqlDao.get(self.GET_LEAD_PHONE_TYPE_COUNT, params)
         value = 0
@@ -910,10 +999,12 @@ class SpamDAO:
                         break
         return int(value)
 
-    def close(self):
+    def close(self) -> None:
+        """Close the database connection."""
         self.pgsqlDao.close()
 
-    def __del__(self):
+    def __del__(self) -> None:
+        """Cleanup database and cache connections on object deletion."""
         self.pgsqlDao.close()
         if self.cacheInstance is not None:
             self.cacheInstance.close()

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Dict, Any
 
 
 class SpamFilterInterface(ABC):
@@ -25,14 +26,8 @@ class SpamFilterInterface(ABC):
     ALGORITHM_MATCH = "algorithm_match"
 
     @abstractmethod
-    def filter(self, lead_payload: dict) -> dict:
+    def filter(self, lead_payload: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Abstract method to filter spam based on the lead payload.
-
-        Args:
-            lead_payload (dict): The lead payload to be analyzed.
-
-        Returns:
-            dict: The result of the spam detection.
+        Filters and analyzes lead payload for spam detection.
         """
         pass

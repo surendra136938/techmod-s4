@@ -2,13 +2,14 @@ import logging
 import json
 import time
 import os
+from typing import Dict, Any, List, Optional, Union
 from urllib.parse import parse_qs, urlencode, urlparse
 from requests.exceptions import RequestException
 import requests
 
 class MoveService:
     """
-    Base class for Move services; implements common features for all services.
+    Base class for Move services with common features and error handling.
     """
 
     ErrorType = {
@@ -57,9 +58,9 @@ class MoveService:
         "MoveServiceErrorPolygonTooLarge": {"mesg": "Polygon size too large", "desc": "Polygon size too large"},
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
-        Initialize the MoveService class.
+        Initializes MoveService with default configuration and connection settings.
         """
         # Initialize attributes
         self.request = ""
@@ -90,15 +91,15 @@ class MoveService:
         else:
             self.trace_info = False
 
-    def connect(self):
+    def connect(self) -> Dict[str, Any]:
         """
-        Connect to the service.
+        Connects to the service and returns response.
         """
         return self.connect_without_token()
 
-    def send_response(self):
+    def send_response(self) -> None:
         """
-        Just before sending, log any errors found in the standard structure.
+        Logs errors and sends JSON response to client.
         """
         # Log any errors found in the response
         if (
@@ -117,9 +118,9 @@ class MoveService:
         print(json.dumps(self.response))
 
     @staticmethod
-    def is_error(response):
+    def is_error(response: Dict[str, Any]) -> bool:
         """
-        By the time this method is called, errors should be all normalized.
+        Checks if response contains errors in normalized structure.
         """
         return (
             isinstance(response, dict)
@@ -129,9 +130,9 @@ class MoveService:
         )
 
     @staticmethod
-    def append_to_query(query, parm, value):
+    def append_to_query(query: str, parm: str, value: str) -> str:
         """
-        Append a parameter and value to the query string.
+        Appends parameter and value to query string.
         """
         if len(query) > 0:
             query += "&"
@@ -142,16 +143,16 @@ class MoveService:
         return query
 
     @staticmethod
-    def append_to_path(path, comp):
+    def append_to_path(path: str, comp: str) -> str:
         """
-        Append a component to the path.
+        Appends component to URL path.
         """
         return f"{path}/{comp}"
 
     @staticmethod
-    def append_to_list(lst, item):
+    def append_to_list(lst: str, item: str) -> str:
         """
-        Append an item to a comma-separated list.
+        Appends item to comma-separated list string.
         """
         if len(lst) > 0:
             lst += f",{item}"
@@ -160,16 +161,16 @@ class MoveService:
         return lst
 
     @staticmethod
-    def string_for_point(lat, lon):
+    def string_for_point(lat: float, lon: float) -> str:
         """
-        Return a string representation of a point.
+        Returns string representation of geographic point.
         """
         return f"({lat},{lon})"
 
     @staticmethod
-    def string_for_points(points):
+    def string_for_points(points: List[Dict[str, float]]) -> str:
         """
-        Return a string representation of a list of points.
+        Returns string representation of list of geographic points.
         """
         s = ""
 
@@ -196,9 +197,9 @@ class MoveService:
         return s
 
     @staticmethod
-    def log_error(error):
+    def log_error(error: Union[Dict[str, str], str]) -> None:
         """
-        Log an error message.
+        Logs error message with code and details.
         """
         code = error.get("code", "UnknownError")
         message = error.get("message", "No details available")
@@ -207,7 +208,7 @@ class MoveService:
     @staticmethod
     def titlecase(s: str) -> str:
         """
-        Convert a string to title case, skipping certain words.
+        Converts string to title case, preserving articles and prepositions.
         """
         # Convert to lowercase and handle special characters
         t = s.lower()
@@ -234,9 +235,9 @@ class MoveService:
         return t
 
     @staticmethod
-    def log(message: str, context: str = "", log_type: str = "I"):
+    def log(message: str, context: str = "", log_type: str = "I") -> None:
         """
-        Log a message with context and type information.
+        Logs message with context and type information.
         """
         log_type = log_type.upper()
         if log_type not in ["I", "W", "E"]:
@@ -266,24 +267,24 @@ class MoveService:
         MoveService.log(f"{code} ({mesg}), pid={os.getpid()}", "", "E")
 
     @staticmethod
-    def log_info(message: str):
+    def log_info(message: str) -> None:
         """
-        Log an informational message.
+        Logs informational message with process ID.
         """
         MoveService.log(f"{message}, pid={os.getpid()}", __name__, "I")
 
-    def connect_without_token(self):
+    def connect_without_token(self) -> Dict[str, Any]:
         """
-        Connect to the service without a token.
+        Connects to service without authentication token.
         """
         self.set_request()
         self.curl()
         self.set_response()
         self.create_trace_info()
         return self.response
-    def curl(self):
+    def curl(self) -> None:
         """
-        Perform the HTTP request using the `requests` library.
+        Performs HTTP request using requests library with timeout handling.
         """
         self.response = ""
         self.error_code = "MoveServiceErrorNone"
@@ -350,16 +351,16 @@ class MoveService:
                     }
                 )
 
-    def set_request(self):
+    def set_request(self) -> None:
         """
-        Set the request details.
+        Sets request details including POST data and URL.
         """
         self.post = self.get_post()
         self.request = self.get_service() + self.get_path() + self.get_query()
 
-    def set_client_id(self):
+    def set_client_id(self) -> None:
         """
-        Automatically append client_id to the request if not already set.
+        Appends client_id to request if not already present.
         """
         parsed_url = urlparse(self.request)
         query_params = parse_qs(parsed_url.query)
@@ -370,9 +371,9 @@ class MoveService:
                 query_params["client_id"] = client_id
                 self.request = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{urlencode(query_params, doseq=True)}"
 
-    def set_response(self):
+    def set_response(self) -> None:
         """
-        Set the response details.
+        Processes response data and handles JSON parsing errors.
         """
         if self.error_code == "MoveServiceErrorNone":
             try:
@@ -390,9 +391,9 @@ class MoveService:
                 )
 
     
-    def create_trace_info(self):
+    def create_trace_info(self) -> None:
         """
-        Add trace information to the response if trace_info is enabled.
+        Adds trace information to response when debugging is enabled.
         """
         if self.trace_info is False:
             return
@@ -402,9 +403,9 @@ class MoveService:
 
         self.response["meta"]["mapi_trace"] = self.trace_info
 
-    def create_error(self, code, mesg="", desc=""):
+    def create_error(self, code: str, mesg: str = "", desc: str = "") -> Dict[str, Any]:
         """
-        Standardize on the same error structure as used by the Move API.
+        Creates standardized error structure matching Move API format.
         """
         # Look up the error message and description if not provided
         if not mesg:
@@ -425,61 +426,61 @@ class MoveService:
             }
         }
 
-    def get_service(self):
+    def get_service(self) -> str:
         """
-        Placeholder for getting the service URL.
-        """
-        return ""
-
-    def get_path(self):
-        """
-        Placeholder for getting the service path.
+        Returns service URL. Override in subclasses.
         """
         return ""
 
-    def get_query(self):
+    def get_path(self) -> str:
         """
-        Placeholder for getting the query string.
-        """
-        return ""
-
-    def get_post(self):
-        """
-        Placeholder for getting the POST data.
+        Returns service path. Override in subclasses.
         """
         return ""
 
-    def get_operation_name(self):
+    def get_query(self) -> str:
         """
-        Get the operation name.
+        Returns query string. Override in subclasses.
+        """
+        return ""
+
+    def get_post(self) -> str:
+        """
+        Returns POST data. Override in subclasses.
+        """
+        return ""
+
+    def get_operation_name(self) -> str:
+        """
+        Returns operation name for this service.
         """
         return "MoveService"
 
     @staticmethod
-    def get_saved_resources_backend():
+    def get_saved_resources_backend() -> str:
         """
-        Get the saved resources backend.
+        Returns saved resources backend configuration.
         """
         return os.getenv("SAVED_RESOURCES_BACKEND", "SRS")
 
     @staticmethod
-    def get_saved_searches_backend():
+    def get_saved_searches_backend() -> str:
         """
-        Get the saved searches backend.
+        Returns saved searches backend configuration.
         """
         return os.getenv("SAVED_SEARCHES_BACKEND", "SRS")
 
     @staticmethod
-    def get_nsi_api_key():
+    def get_nsi_api_key() -> str:
         """
-        Get the NSI API key.
+        Returns NSI API key from environment.
         """
         return os.getenv("NSI_API_KEY", "")
 
     @staticmethod
-    def get_srs_api_key():
+    def get_srs_api_key() -> str:
         """
-        Get the SRS API key.
+        Returns SRS API key from environment.
         """
         return os.getenv("SRS_API_KEY", "")
 

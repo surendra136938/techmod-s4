@@ -9,15 +9,9 @@ class SpamFilterFactory:
     """
 
     @staticmethod
-    def get_spam_filter(lead_type: str):
+    def get_spam_filter(lead_type: str) -> SpamFilterInterface:
         """
-        Get the appropriate spam filter instance based on the lead type.
-
-        Args:
-            lead_type (str): The type of lead.
-
-        Returns:
-            SpamFilter: An instance of the appropriate spam filter.
+        Returns the appropriate spam filter instance based on lead type.
         """
         if lead_type == SpamFilterInterface.LEAD_TYPE_CO_BROKE:
             return SimpleSpamFilter(lead_type)

@@ -3,7 +3,7 @@ import logging
 
 class NormalizeEmail:
     """
-    A class to normalize email addresses based on specific rules for certain providers.
+    Normalizes email addresses based on provider-specific rules.
     """
 
     # Patterns for normalization
@@ -22,13 +22,7 @@ class NormalizeEmail:
     @staticmethod
     def normalize_email(email: str) -> str:
         """
-        Normalize the given email address based on provider-specific rules.
-
-        Args:
-            email (str): The email address to normalize.
-
-        Returns:
-            str: The normalized email address.
+        Normalizes email address using provider-specific rules and patterns.
         """
         try:
             logging.info(f"Normalizing email: {email}")

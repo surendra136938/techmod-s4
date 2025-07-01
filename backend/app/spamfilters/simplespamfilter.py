@@ -1,3 +1,4 @@
+from typing import Dict, Any
 from app.spamfilters.spamfilter import SpamFilter
 from app.spamfilters.spamfilterinterface import SpamFilterInterface
 from app.dao.spamdao import SpamDAO
@@ -7,12 +8,17 @@ import json
 
 class SimpleSpamFilter(SpamFilter):
 
-    def __init__(self, lead_type):
+    def __init__(self, lead_type: str) -> None:
+        """
+        Initializes SimpleSpamFilter with specified lead type.
+        """
         logging.info("calling SimpleSpamFilter()")
         super().__init__(lead_type)
 
-    def filter(self, lead_payload):
-        import pdb; pdb.set_trace()
+    def filter(self, lead_payload: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Filters lead payload through comprehensive spam detection rules and algorithms.
+        """
         detection_result = SpamFilterInterface.NOT_SPAM
         detection_result_email = SpamFilterInterface.NOT_SPAM
         detection_result_phone = SpamFilterInterface.NOT_SPAM
@@ -34,7 +40,6 @@ class SimpleSpamFilter(SpamFilter):
             logging.info("Phone Number Set")
         if sender_email_address:
             logging.info("Email Address Set")
-        import pdb; pdb.set_trace()
         member_session_visitor_block = self.check_member_session_visitor_id()
         if len(member_session_visitor_block) > 0:
             spam_detection = {

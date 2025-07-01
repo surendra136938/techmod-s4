@@ -1,9 +1,20 @@
 import psycopg2
 from psycopg2 import OperationalError, Error
+from typing import Optional, List, Dict, Any, Tuple, Union
 from app.services.moveservice import MoveService
 
 class PgSqlDAO:
-    def __init__(self, db_host, db_user, db_password, s4_database_name, db_port=5432):
+    """PostgreSQL data access object for database operations."""
+    
+    def __init__(
+        self, 
+        db_host: str, 
+        db_user: str, 
+        db_password: str, 
+        s4_database_name: str, 
+        db_port: int = 5432
+    ) -> None:
+        """Initialize PostgreSQL connection with provided credentials."""
         self.db = None
         try:
             self.db = psycopg2.connect(
@@ -18,7 +29,8 @@ class PgSqlDAO:
             MoveService.log_error(f"Failed to connect to PostgreSQL: {e}")
             self.db = None
 
-    def insert(self, insert_statement, params):
+    def insert(self, insert_statement: str, params: Tuple[Any, ...]) -> None:
+        """Execute an INSERT SQL statement with parameters."""
         MoveService.log_info(f"Calling PgSqlDAO::insert(), executing sql insert statement: {insert_statement}")
         if params:
             for idx, val in enumerate(params, 1):
@@ -35,7 +47,8 @@ class PgSqlDAO:
         finally:
             cursor.close()
 
-    def update(self, update_statement, params):
+    def update(self, update_statement: str, params: Tuple[Any, ...]) -> None:
+        """Execute an UPDATE SQL statement with parameters."""
         MoveService.log_info(f"Calling PgSqlDAO::update(), executing sql update statement: {update_statement}")
         if params:
             for idx, val in enumerate(params, 1):
@@ -52,7 +65,8 @@ class PgSqlDAO:
         finally:
             cursor.close()
 
-    def get(self, query, params=None):
+    def get(self, query: str, params: Optional[Tuple[Any, ...]] = None) -> List[Dict[str, Any]]:
+        """Execute a SELECT query and return results as list of dictionaries."""
         MoveService.log_info(f"Calling PgSqlDAO::get(), executing sql query: {query}")
         if params:
             for idx, val in enumerate(params, 1):
@@ -73,7 +87,8 @@ class PgSqlDAO:
             cursor.close()
         return result
 
-    def delete(self, delete_statement, params):
+    def delete(self, delete_statement: str, params: Tuple[Any, ...]) -> None:
+        """Execute a DELETE SQL statement with parameters."""
         MoveService.log_info(f"Calling PgSqlDAO::delete(), executing sql delete statement: {delete_statement}")
         if params:
             for idx, val in enumerate(params, 1):
@@ -90,7 +105,8 @@ class PgSqlDAO:
         finally:
             cursor.close()
 
-    def close(self):
+    def close(self) -> None:
+        """Close the database connection."""
         if self.db:
             self.db.close()
 

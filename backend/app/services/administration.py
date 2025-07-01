@@ -1,10 +1,14 @@
 import json
+from typing import Union, List, Dict, Any
 from app.dao.spamdao import SpamDAO
 from app import config
 from fastapi.responses import JSONResponse
 
 class Administration:
-    def __init__(self):
+    def __init__(self) -> None:
+        """
+        Initializes Administration service with spam detection database connection.
+        """
         self.spamDAO = SpamDAO(
             db_host=config.db_host,
             db_user=config.db_user, 
@@ -16,7 +20,10 @@ class Administration:
         )
 
     # Add Algorithm Config
-    def add_algorithm_config(self, post_body):
+    def add_algorithm_config(self, post_body: str) -> JSONResponse:
+        """
+        Adds new algorithm configuration for spam detection rules.
+        """
         data = json.loads(post_body)
         rule_type = data.get("rule_type", "").strip()
         lead_count = data.get("lead_count", 0)
@@ -32,7 +39,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Get Single Algorithm Config
-    def get_single_algorithm_config(self, post_body):
+    def get_single_algorithm_config(self, post_body: str) -> JSONResponse:
+        """
+        Retrieves specific algorithm configuration by ID.
+        """
         data = json.loads(post_body)
         id_ = data.get("id", 0)
         algorithm_config_result = None
@@ -46,7 +56,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Update Algorithm Config
-    def update_algorithm_config(self, post_body):
+    def update_algorithm_config(self, post_body: str) -> JSONResponse:
+        """
+        Updates existing algorithm configuration with new parameters.
+        """
         data = json.loads(post_body)
         id_ = data.get("id", 0)
         rule_type = data.get("rule_type", "").strip()
@@ -63,7 +76,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Get Algorithm Config
-    def get_algorithm_config(self):
+    def get_algorithm_config(self) -> JSONResponse:
+        """
+        Retrieves all algorithm configurations for spam detection.
+        """
         algorithm_config_result = self.spamDAO.get_algorithm_config("false")
 
         response = {
@@ -73,7 +89,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Delete Algorithm Config
-    def delete_algorithm_config(self, post_body):
+    def delete_algorithm_config(self, post_body: str) -> JSONResponse:
+        """
+        Deletes algorithm configuration by ID.
+        """
         data = json.loads(post_body)
         id_ = data.get("id",0)
         if id_:
@@ -86,7 +105,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Get Bad Words List
-    def get_bad_words_list(self):
+    def get_bad_words_list(self) -> JSONResponse:
+        """
+        Retrieves list of bad words used for spam filtering.
+        """
         bad_word_list = []
         bad_words_result = self.spamDAO.get_bad_words_list(False)
 
@@ -109,7 +131,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Add Bad Word
-    def add_bad_word(self, post_body):
+    def add_bad_word(self, post_body: bytes) -> JSONResponse:
+        """
+        Adds new bad word to spam filtering dictionary.
+        """
         post_body = post_body.decode("utf-8")
         data = json.loads(post_body)
         text = data.get("text","").strip()
@@ -133,7 +158,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Delete Bad Word
-    def delete_bad_word(self, post_body):
+    def delete_bad_word(self, post_body: bytes) -> JSONResponse:
+        """
+        Deletes bad words from spam filtering dictionary by IDs.
+        """
         post_body = post_body.decode("utf-8")
         data = json.loads(post_body)
         id_list = data.get("ids", [])
@@ -149,7 +177,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Get Lead Weights
-    def get_lead_weights(self):
+    def get_lead_weights(self) -> JSONResponse:
+        """
+        Retrieves lead type weights used in spam detection algorithms.
+        """
         lead_weights_result = [] 
         lead_weights_result = self.spamDAO.get_lead_weights(False)
         response = {
@@ -159,7 +190,10 @@ class Administration:
         return JSONResponse(content=response, headers={"Expires": "0"})
 
     # Update Lead Weight
-    def update_weight(self, post_body):
+    def update_weight(self, post_body: bytes) -> JSONResponse:
+        """
+        Updates weight value for specific lead type in spam detection.
+        """
         post_body = post_body.decode("utf-8")
         data = json.loads(post_body)
         lead_type = data.get("lead_type", "").strip()

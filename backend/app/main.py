@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 import logging
 import json
+from typing import Dict, Any
 from app.services.moveservice import MoveService
 from app.spamfilters.spamfilterfactory import SpamFilterFactory
 from app.spamfilters.spamfilterinterface import SpamFilterInterface
@@ -18,9 +19,9 @@ admin_routers(app)
 # Endpoint: /detect_spam
 # --------------------
 @app.post("/detect_spam")
-async def detect_spam(request: Request):
+async def detect_spam(request: Request) -> Dict[str, Any]:
     """
-    Receives payloads and processes spam detection logic.
+    Detects spam in lead submissions and returns detection results.
     """
     try:
         post_body = await request.body()
@@ -62,9 +63,9 @@ async def detect_spam(request: Request):
 # Endpoint: /detect_far_spam
 # --------------------
 @app.post("/detect_far_spam")
-async def detect_far_spam(request: Request):
+async def detect_far_spam(request: Request) -> Dict[str, Any]:
     """
-    Receives payloads and processes FAR spam detection logic.
+    Detects spam in FAR (Find A Realtor) lead submissions.
     """
     try:
         post_body = await request.body()
@@ -96,9 +97,9 @@ async def detect_far_spam(request: Request):
 # Endpoint: /resubmit_lead
 # --------------------
 @app.post("/resubmit_lead")
-async def resubmit_lead(request: Request):
+async def resubmit_lead(request: Request) -> Dict[str, Any]:
     """
-    Endpoint to re-submit lead events using LCSService.
+    Re-submits lead events using LCSService for processing.
     """
     try:
         post_body = await request.body()

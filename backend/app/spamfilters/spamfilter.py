@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Dict, Any, Optional, List
 from app.spamfilters.spamfilterinterface import SpamFilterInterface
 from app.dao.spamdao import SpamDAO
 from app.spamfilters.normalize_email import NormalizeEmail
@@ -7,7 +8,10 @@ import logging
 from app import config
 
 class SpamFilter(SpamFilterInterface, ABC):
-    def __init__(self, lead_type=SpamFilterInterface.LEAD_TYPE_CO_BROKE):
+    def __init__(self, lead_type: str = SpamFilterInterface.LEAD_TYPE_CO_BROKE) -> None:
+        """
+        Initializes the spam filter with database connections and filter lists.
+        """
         self.spamsDAO = SpamDAO(
             db_host=config.db_host,
             db_user=config.db_user, 
@@ -59,7 +63,6 @@ class SpamFilter(SpamFilterInterface, ABC):
         # self.lead_count_short_phone_limit = None
 
         # get a list of bad words first
-        import pdb; pdb.set_trace()
         bad_words_result = self.spamsDAO.get_bad_words_list()
         if bad_words_result is not None:
             for value in bad_words_result:
@@ -75,7 +78,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.badWordMap[str(text).strip().lower()] = f"{id}|{str(type).strip()}"
 
         black_phone_list_result = self.spamsDAO.get_black_phone_list()
-        import pdb; pdb.set_trace()
         if black_phone_list_result is not None:
             for value in black_phone_list_result:
                 phone = None
@@ -86,7 +88,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.blackPhoneList.append(str(phone).strip().lower())
 
         suspected_phone_list_result = self.spamsDAO.get_suspected_phone_list()
-        import pdb; pdb.set_trace()
         if suspected_phone_list_result is not None:
             for value in suspected_phone_list_result:
                 phone = None
@@ -97,7 +98,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.suspeciousPhoneList.append(str(phone).strip().lower())
 
         black_email_list_result = self.spamsDAO.get_black_email_list()
-        import pdb; pdb.set_trace()
         if black_email_list_result is not None:
             for value in black_email_list_result:
                 email = None
@@ -118,7 +118,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.blackIpList.append(str(ip).strip().lower())
 
         whitelisted_url_list_result = self.spamsDAO.get_whitelisted_url_list()
-        import pdb; pdb.set_trace()
         if whitelisted_url_list_result is not None:
             for value in whitelisted_url_list_result:
                 url = None
@@ -129,7 +128,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.whiteUrlList.append(str(url).strip().lower())
 
         white_email_list_result = self.spamsDAO.get_white_email_list()
-        import pdb; pdb.set_trace()
         if white_email_list_result is not None:
             for value in white_email_list_result:
                 email = None
@@ -140,7 +138,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.whiteEmailList.append(str(email).strip().lower())
 
         white_ip_list_result = self.spamsDAO.get_whitelisted_ip()
-        import pdb; pdb.set_trace()
         if white_ip_list_result is not None:
             for value in white_ip_list_result:
                 ip = None
@@ -151,7 +148,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.whiteIpList.append(str(ip).strip().lower())
 
         white_phone_list_result = self.spamsDAO.get_whitelisted_phone()
-        import pdb; pdb.set_trace()
         if white_phone_list_result is not None:
             for value in white_phone_list_result:
                 phone = None
@@ -162,7 +158,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.whitePhoneList.append(str(phone).strip().lower())
 
         suspecious_email_list_result = self.spamsDAO.get_suspected_email_list()
-        import pdb; pdb.set_trace()
         if suspecious_email_list_result is not None:
             for value in suspecious_email_list_result:
                 email = None
@@ -173,7 +168,6 @@ class SpamFilter(SpamFilterInterface, ABC):
                     self.suspeciousEmailList.append(str(email).strip().lower())
 
         suspecious_ip_list_result = self.spamsDAO.get_suspected_ip_list()
-        import pdb; pdb.set_trace()
         if suspecious_ip_list_result is not None:
             for value in suspecious_ip_list_result:
                 ip = None
@@ -190,12 +184,17 @@ class SpamFilter(SpamFilterInterface, ABC):
         # $this->time_treshold_long = $filter_config->get_time_treshold_long($lead_type);
         # $this->lead_count_short_phone_limit = $filter_config->get_leadcount_limit_phone_short($lead_type);
 
-    def filter(self, lead_payload):
+    def filter(self, lead_payload: Dict[str, Any]) -> str:
+        """
+        Filters lead payload and returns spam detection result.
+        """
         self.spamsDAO = None
         return SpamFilterInterface.NOT_SPAM
 
-    def parse_lead_payload(self, post_body):
-        import pdb; pdb.set_trace()
+    def parse_lead_payload(self, post_body: Dict[str, Any]) -> None:
+        """
+        Parses lead payload and extracts relevant fields for spam detection.
+        """
         if "lead" in post_body and "id" in post_body["lead"] and post_body["lead"]["id"]:
             self.lcs_id = post_body["lead"]["id"]
 
@@ -270,7 +269,10 @@ class SpamFilter(SpamFilterInterface, ABC):
         elif post_lead_method == "tpn_call":
             self.lead_method = "tpn_call"
 
-    def default_data(self):
+    def default_data(self) -> Dict[str, Any]:
+        """
+        Returns default data structure for spam detection results.
+        """
         return {
             "rule": [],
             "action": SpamFilterInterface.NOT_BLOCKED,
@@ -279,7 +281,10 @@ class SpamFilter(SpamFilterInterface, ABC):
             }
         }
 
-    def formatted_data(self, ruleAction, ruleName, spamReason, data):
+    def formatted_data(self, ruleAction: str, ruleName: str, spamReason: List[str], data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Formats spam detection data with rule information and context.
+        """
         ruleDesc = {
             "blacklist": "it could be blocked due to confirmed or suspected lead attribute(s)",
             "whitelist": "it could be allowed due to whitelisted lead attribute(s)",
@@ -299,12 +304,17 @@ class SpamFilter(SpamFilterInterface, ABC):
             }
         }
 
-    def getHost(self, Address):
+    def getHost(self, Address: str) -> str:
+        """
+        Extracts hostname from URL address.
+        """
         import re
         return re.sub(r'(?:https?:\/\/)?(?:www\.)?(.*)\/?$', r'\1', Address)
 
-    def check_member_session_visitor_id(self):
-        import pdb; pdb.set_trace()
+    def check_member_session_visitor_id(self) -> Dict[str, str]:
+        """
+        Checks member, session, and visitor IDs against bad word list.
+        """
         id_array = {
             "member_id": self.member_id,
             "session_id": self.session_id,
@@ -330,7 +340,10 @@ class SpamFilter(SpamFilterInterface, ABC):
         return formatted_message
     '''
 
-    def check_message_body(self):
+    def check_message_body(self) -> str:
+        """
+        Analyzes message body content for spam indicators and bad words.
+        """
         detection_result = SpamFilterInterface.NOT_SPAM
         spam_detection = {"detection_result": detection_result, "data": self.default_data()}
         checked_message_body = self.cleanup_message_body(self.message_body)
@@ -395,7 +408,10 @@ class SpamFilter(SpamFilterInterface, ABC):
 
         return detection_result
 
-    def caculate_suspecious_score(self):
+    def caculate_suspecious_score(self) -> float:
+        """
+        Calculates suspicious score based on text analysis.
+        """
         score = 0.0
         if self.suspecious_spam_score > 0:
             return self.suspecious_spam_score
@@ -424,7 +440,10 @@ class SpamFilter(SpamFilterInterface, ABC):
                 score = 10
         return score
 
-    def cleanup_message_body(self, message_body, is_second_sanitize=False):
+    def cleanup_message_body(self, message_body: str, is_second_sanitize: bool = False) -> str:
+        """
+        Cleans and sanitizes message body text for analysis.
+        """
         import re
         if is_second_sanitize:
             pattern = [r'[^A-Za-z0-9\s\s+]', r'[+,Š,Å]']
@@ -436,7 +455,10 @@ class SpamFilter(SpamFilterInterface, ABC):
         clean_message_body = " ".join(list(dict.fromkeys(clean_message_body.split(" "))))
         return clean_message_body
 
-    def default_config(self):
+    def default_config(self) -> List[Dict[str, int]]:
+        """
+        Returns default algorithm configuration for spam detection.
+        """
         config = []
         config1 = {}
         config2 = {}
@@ -448,7 +470,10 @@ class SpamFilter(SpamFilterInterface, ABC):
         config.append(config2)
         return config
 
-    def check_email_pattern(self):
+    def check_email_pattern(self) -> str:
+        """
+        Checks email against pattern list for spam detection.
+        """
         pattern_result = SpamFilterInterface.NOT_SPAM
         pattern_list = self.spamsDAO.get_pattern_email_list()
         if pattern_list is not None:
@@ -466,7 +491,10 @@ class SpamFilter(SpamFilterInterface, ABC):
                             return pattern_result
         return pattern_result
 
-    def check_lead_sender(self):
+    def check_lead_sender(self) -> str:
+        """
+        Checks lead sender email against algorithm rules and thresholds.
+        """
         logging.info("Lead type is =%s", self.lead_method)
         detection_result = SpamFilterInterface.NOT_SPAM
         rule_type = 'email'
@@ -524,7 +552,10 @@ class SpamFilter(SpamFilterInterface, ABC):
                         break
         return detection_result
 
-    def check_ip_sender(self):
+    def check_ip_sender(self) -> str:
+        """
+        Checks sender IP address against algorithm rules and thresholds.
+        """
         detection_result = SpamFilterInterface.NOT_SPAM
         rule_type_ip = 'ip_address'
         ip_algorithm_config = self.spamsDAO.get_rule_type_config(rule_type_ip)
@@ -597,7 +628,10 @@ class SpamFilter(SpamFilterInterface, ABC):
                         break
         return detection_result
 
-    def check_phone_sender(self):
+    def check_phone_sender(self) -> str:
+        """
+        Checks sender phone number against algorithm rules and thresholds.
+        """
         detection_result = SpamFilterInterface.NOT_SPAM
         rule_type_phone = 'phone'
         phone_algorithm_config = self.spamsDAO.get_rule_type_config(rule_type_phone)
@@ -670,7 +704,10 @@ class SpamFilter(SpamFilterInterface, ABC):
                         break
         return detection_result
 
-    def add_lead_sender(self):
+    def add_lead_sender(self) -> None:
+        """
+        Adds or updates lead sender information in the database.
+        """
         current_utc_time = int(datetime.now(timezone(timedelta(hours=-8))).timestamp())
         lead_submitted_time = current_utc_time
         self.spamsDAO.save_or_update_sender(self.sender_email, self.sender_ip, self.lead_method, lead_submitted_time, False, self.sender_phone)
@@ -679,20 +716,32 @@ class SpamFilter(SpamFilterInterface, ABC):
         lead_submitted_time = self.convert_to_UTC_phone_time(self.lead_submitted_time)
         self.spamsDAO.save_or_update_phone_sender(self.sender_phone, lead_submitted_time, False)
 
-    def convert_to_UTC_time(self, time_stamp):
+    def convert_to_UTC_time(self, time_stamp: str) -> int:
+        """
+        Converts timestamp string to UTC time integer.
+        """
         utc_time = 0
         utc_time = int(datetime.strptime(time_stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp())
         return utc_time
 
-    def convert_to_UTC_phone_time(self, time_stamp):
+    def convert_to_UTC_phone_time(self, time_stamp: str) -> int:
+        """
+        Converts phone timestamp string to UTC time integer.
+        """
         utc_time = 0
         utc_time = int(datetime.strptime(time_stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp())
         return utc_time
 
-    def add_sender_to_black_email_lsit(self):
+    def add_sender_to_black_email_lsit(self) -> None:
+        """
+        Adds sender email to blacklist.
+        """
         self.spamsDAO.add_to_black_email_lsit(self.sender_email)
 
-    def check_phone_format(self, phone_format):
+    def check_phone_format(self, phone_format: str) -> str:
+        """
+        Validates phone number format and returns detection result.
+        """
         phone = ''.join(filter(str.isdigit, phone_format))
         num_digits = len(phone)
         if num_digits == 0 or (num_digits >= 10 and num_digits <= 13):
@@ -701,19 +750,34 @@ class SpamFilter(SpamFilterInterface, ABC):
             detection_result = SpamFilterInterface.IS_SPAM
         return detection_result
 
-    def add_sender_to_black_phone_lsit(self):
+    def add_sender_to_black_phone_lsit(self) -> None:
+        """
+        Adds sender phone to blacklist.
+        """
         self.spamsDAO.add_to_black_phone_list(self.sender_phone)
 
-    def add_sender_to_suspected_email_lsit(self):
+    def add_sender_to_suspected_email_lsit(self) -> None:
+        """
+        Adds sender email to suspected list.
+        """
         self.spamsDAO.add_to_suspected_email_lsit(self.sender_email)
 
-    def add_sender_to_suspected_ip_list(self):
+    def add_sender_to_suspected_ip_list(self) -> None:
+        """
+        Adds sender IP to suspected list.
+        """
         self.spamsDAO.add_to_suspected_ip_list(self.sender_ip)
 
-    def add_sender_to_suspected_phone_list(self):
+    def add_sender_to_suspected_phone_list(self) -> None:
+        """
+        Adds sender phone to suspected list.
+        """
         self.spamsDAO.add_to_suspected_phone_list(self.sender_phone)
 
-    def check_email_domain(self, sender_email_address):
+    def check_email_domain(self, sender_email_address: str) -> str:
+        """
+        Checks email domain against blacklist for spam detection.
+        """
         detection_result = SpamFilterInterface.NOT_SPAM
         if sender_email_address == "":
             return detection_result
