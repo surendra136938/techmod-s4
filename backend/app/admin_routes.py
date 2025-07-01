@@ -5,7 +5,7 @@ from app.s4_admin.black_ip import router as black_ip_router
 from app.s4_admin.black_phone import router as black_phone_router
 from app.s4_admin.lead_weights import router as lead_weights_router
 
-def include_routers(app):
+def admin_routers(app):
     """
     Include all routers in the FastAPI app
     """
@@ -21,3 +21,4 @@ def include_routers(app):
     app.include_router(black_phone_router)
     # Include the lead weights router
     app.include_router(lead_weights_router)
+

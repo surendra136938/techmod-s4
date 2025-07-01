@@ -12,4 +12,3 @@ async def update_weight(request: Request):
 @router.get("/list/")
 async def get_lead_weights():
     return service.get_lead_weights()
-

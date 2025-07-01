@@ -27,3 +27,4 @@ async def get_algorithm_config():
 async def update_algorithm_config(request: Request):
     post_body = await request.body()
     return service.update_algorithm_config(post_body)
+

@@ -93,3 +93,4 @@ class PgSqlDAO:
     def close(self):
         if self.db:
             self.db.close()
+

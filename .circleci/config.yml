@@ -108,23 +108,6 @@ jobs:
             echo aws-id : <<parameters.aws-id>>
             echo ${CIRCLE_SHA1:0:8}
             echo $IMAGE
-      #       docker pull $IMAGE
-      #       echo "Running unit tests"
-      #       docker run -it --user root $IMAGE bash -c "./run_tests.sh"
-      #       CONTAINER_ID=$(docker ps -lq)
-      #       echo "Copying coverage report from docker image for re-use in SonarQube line coverage check"
-      #       docker cp $CONTAINER_ID:/app/coverage ./reports/coverage
-      #       cp ./reports/coverage/coverage.xml ./reports/coverage.xml
-      #       echo "Stopping and removing container"
-      #       docker container stop $CONTAINER_ID
-      #       docker container rm $CONTAINER_ID
-      # - run:
-      #     command: |
-      #       echo "sonar.python.coverage.reportPaths=reports/coverage.xml" > sonar-project.properties
-      # - move-ci/sonar-scan:
-      #     extra-args: "-Dsonar.sources=ModelIntegration
-      #                 -Dsonar.exclusions=**/tests/**,**/docker-compose/**
-      #                 -Dsonar.python.coverage.reportPaths=reports/coverage.xml"
 
   push-image-ecr:
     description: "Build and push Docker image to ECR"
@@ -157,51 +140,7 @@ jobs:
           repository-tag-component: techmod-s4
           repository-tag-owner: techmod-s4 
           repository-tag-product: s4_backend  
-          tags: ${CUSTOM_TAG}  # Include CUSTOM_TAG in tags
-          # skip-when-tags-exist: true
-
-  update-imagetag:
-    description: "Update the tag"
-    executor: linux-vm
-    parameters:
-      short-env:
-        type: string
-    steps:
-      - attach_workspace:
-          at: /tmp
-      - run:
-          name: Load saved CUSTOM_TAG
-          command: |
-            CUSTOM_TAG=$(cat /tmp/custom_tag)
-            echo "export CUSTOM_TAG=${CUSTOM_TAG}" >> $BASH_ENV
-      - move-ci/gh-install
-      - run:
-          name: Clone the repository manually
-          command: |
-            git clone https://${GH_PAT}@github.com/MoveRDC/techmod-s4.argo.git
-            cd techmod-s4
-            git checkout dev
-            git pull origin dev
-
-      - run:
-          name: Update `values.dev.yaml`
-          command: |
-            cd ir.data.science.integration.argo
-            if ! command -v yq &> /dev/null; then
-              wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
-              chmod +x /usr/local/bin/yq
-            fi
-            yq eval -i '.rollout.containers[0].image.tag = env(CUSTOM_TAG)' helm/values.dev.yaml
-
-      - run:
-          name: Commit & Push to `dev`
-          command: |
-            cd ir.data.science.integration.argo
-            git config --global user.email "circleci-move@moveci.com"
-            git config --global user.name "CircleCI Bot"
-            git add helm/values.dev.yaml
-            git commit -m "Auto-update image tag to $CUSTOM_TAG" || echo "No changes to commit."
-            git push origin dev || echo "Push failed! Check permissions."
+          tags: ${CUSTOM_TAG}
 
 workflows:
   any-branch:
@@ -245,14 +184,6 @@ workflows:
             - slack-circleci-bot
           <<: *feature-branch-job
           <<: *notify-success-and-fail
-
-      # - update-imagetag:
-      #     name: update-imagetag-dev
-      #     short-env: dev
-      #     context: [aws, github, slack-circleci-bot]
-      #     <<: *feature-branch-job
-      #     requires:
-      #       - push-image-ecr-dev
 
   release-branch:
     jobs:

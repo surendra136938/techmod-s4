@@ -16,16 +16,10 @@ RUN adduser --disabled-password --gecos "" user
 RUN pip3 install --upgrade pip && \
     pip3 install -r requirements.txt -t /app
 
-# Optional: install coverage (commented out)
-# RUN pip3 install coverage
-
 # Change ownership
 RUN chown -R user:user /app
 # RUN chmod +x ./run_tests.sh
 USER user
-
-# Install FastAPI dependencies from requirements.txt
-# RUN pip3 install --no-cache-dir -r /app/app/requirements.txt
 
 # Expose FastAPI port
 EXPOSE 8000

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from app.spamfilters.spamfilterinterface import SpamFilterInterface
 from app.dao.spamdao import SpamDAO
-# from app.services.cacheservice import CacheService
 from app.spamfilters.normalize_email import NormalizeEmail
 from datetime import datetime, timezone, timedelta
 import logging
@@ -707,15 +706,12 @@ class SpamFilter(SpamFilterInterface, ABC):
 
     def add_sender_to_suspected_email_lsit(self):
         self.spamsDAO.add_to_suspected_email_lsit(self.sender_email)
-        self.invalidate_cache(SpamDAO.SPAM_SUSPECTED_EMAIL_LIST_CACHE_KEY)
 
     def add_sender_to_suspected_ip_list(self):
         self.spamsDAO.add_to_suspected_ip_list(self.sender_ip)
-        self.invalidate_cache(SpamDAO.SPAM_SUSPECTED_IP_LIST_CACHE_KEY)
 
     def add_sender_to_suspected_phone_list(self):
         self.spamsDAO.add_to_suspected_phone_list(self.sender_phone)
-        self.invalidate_cache(SpamDAO.SPAM_SUSPECTED_PHONE_LIST_CACHE_KEY)
 
     def check_email_domain(self, sender_email_address):
         detection_result = SpamFilterInterface.NOT_SPAM
@@ -728,8 +724,3 @@ class SpamFilter(SpamFilterInterface, ABC):
         if domain in self.blackEmailList:
             detection_result = SpamFilterInterface.IS_SPAM
         return detection_result
-
-    def invalidate_cache(self, cache_key):
-        cacheService = CacheService()
-        cacheService.invalidate_cache_on_all_node(cache_key)
-        cacheService = None

@@ -17,4 +17,3 @@ async def delete_bad_word(request: Request):
 @router.get("/list/")
 async def get_bad_words_list():
     return service.get_bad_words_list()
-
