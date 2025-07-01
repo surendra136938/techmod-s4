@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pydantic
+pytest
+redis
+psycopg2-binary

@@ -1,0 +1,228 @@
+version: 2.1
+
+orbs:
+  move-ci: moverdc/move-ci@2.0.0
+  slack: circleci/slack@5.1.1
+
+workflow-anchors:
+  any-branch-job: &any-branch-job
+    filters:
+      branches:
+        ignore:
+          - main
+          - /^feature\/.*/
+          - /^release\/.*/
+          - ir.datascience.int
+  feature-branch-job: &feature-branch-job
+    filters:
+      branches:
+        only:
+          - /^feature\/.*/
+          - ir.datascience.int
+  release-branch-job: &release-branch-job
+    filters:
+      branches:
+        only: /^release\/.*/
+  main-branch-job: &main-branch-job
+    filters:
+      branches:
+        only: main
+  slack-notifications:
+    - &slack-if-job-failed
+      slack/notify:
+        event: fail
+        channel: techmod-s4-test
+        template: SLACK_TPL_RDP_FAILURE_DETAILED_LATEST
+    - &slack-if-job-succeeded
+      slack/notify:
+        event: pass
+        channel: techmod-s4-test
+        template: SLACK_TPL_RDP_SUCCESS_DETAILED_LATEST
+  notify-success-and-fail: &notify-success-and-fail
+    post-steps:
+      - *slack-if-job-succeeded
+      - *slack-if-job-failed
+  notify-fail: &notify-fail
+    post-steps:
+      - *slack-if-job-failed
+  exclude-base-branch: &exclude-base-branch
+    filters:
+      branches:
+        ignore:
+          - main
+  only-pr: &only-pr
+    filters:
+      branches:
+        ignore:
+          - main
+          - /dev\/.*/
+          - /feature\/.*/
+          - /master/
+          - ir.datascience.int
+  aws-account: &aws-account
+    type: enum
+    enum: [AWS_ACCOUNT_SDSREAD_DEV, AWS_ACCOUNT_SDSREAD_QA, AWS_ACCOUNT_SDSREAD_PROD]
+  aws-id: &aws-id
+    type: string
+  aws-ecr-repo-name: &aws-ecr-repo-name
+    type: string
+  short-env: &short-env
+    type: string
+    default: "dev"
+executors:
+  python-executor:
+    docker:
+      - image: cimg/python:3.12
+  linux-vm:
+    machine:
+      image: ubuntu-2204:current
+      docker_layer_caching: true
+
+jobs:
+  run-tests-and-sonar-scan:
+    description: "Run unit tests on created docker image and run sonar scan"
+    executor: linux-vm
+    parameters:
+      aws-id: *aws-id
+    steps:
+      - checkout
+      - move-ci/aws-tunnel-up
+      - move-ci/aws-proxy-up:
+          export-proxy-variables: http
+      - move-ci/aws-web-auth:
+          role-arn: arn:aws:iam::<<parameters.aws-id>>:role/cicd-circleci-ecr-oidc-role
+      - move-ci/ecr-login:
+          region: us-west-2
+          registry-id: <<parameters.aws-id>>
+      - attach_workspace:
+          at: /tmp
+      - run: mkdir reports
+      - run:
+          name: Load CUSTOM_TAG from workspace
+          command: |
+            CUSTOM_TAG=$(cat /tmp/custom_tag)
+            echo "export CUSTOM_TAG=${CUSTOM_TAG}" >> $BASH_ENV
+      - run:
+          command: |
+            IMAGE=<<parameters.aws-id>>.dkr.ecr.us-west-2.amazonaws.com/sdsread/ir-data-science-integration:${CUSTOM_TAG}
+            echo aws-id : <<parameters.aws-id>>
+            echo ${CIRCLE_SHA1:0:8}
+            echo $IMAGE
+
+  push-image-ecr:
+    description: "Build and push Docker image to ECR"
+    executor: linux-vm
+    steps:
+      - checkout
+      - move-ci/aws-tunnel-up
+      - move-ci/aws-proxy-up:
+          export-proxy-variables: http
+      - attach_workspace:
+          at: .
+      - run:
+          name: list files in workspace
+          command: |
+            echo "Listing files in workspace:"
+            ls -la .
+      - run:
+          name: Set custom environment variable with date-time
+          command: |
+            TIMESTAMP=$(TZ=Asia/Kolkata date +"%m%d-%H%M")
+            CUSTOM_TAG="${CIRCLE_SHA1}-${TIMESTAMP}"
+            echo "export CUSTOM_TAG=${CUSTOM_TAG}" >> $BASH_ENV
+            echo "${CUSTOM_TAG}" > /tmp/custom_tag
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - custom_tag
+      - move-ci/ecr-build-and-push:
+          repository-name: sdsread/techmod-s4
+          repository-tag-component: techmod-s4
+          repository-tag-owner: techmod-s4 
+          repository-tag-product: s4_backend  
+          tags: ${CUSTOM_TAG}
+
+workflows:
+  any-branch:
+    jobs:  
+      - push-image-ecr:
+          name: push-image-ecr-any-branch
+          context: [aws, slack-circleci-bot]  
+          <<: *any-branch-job
+          <<: *notify-fail
+      
+      - run-tests-and-sonar-scan:
+          name: unit-test-and-sonarqube
+          aws-id: "799269618777"
+          requires:
+            - push-image-ecr-any-branch
+          context:
+            - aws
+            - sonarqube
+            - github
+            - slack-circleci-bot
+          <<: *any-branch-job
+          <<: *notify-fail
+        
+  feature-branch:
+    jobs:
+      - push-image-ecr:
+          name: push-image-ecr-dev
+          context: [aws, slack-circleci-bot]  
+          <<: *feature-branch-job
+          <<: *notify-success-and-fail
+      
+      - run-tests-and-sonar-scan:
+          name: unit-test-and-sonarqube-dev
+          aws-id: "799269618777"
+          requires:
+            - push-image-ecr-dev
+          context:
+            - aws
+            - sonarqube
+            - github
+            - slack-circleci-bot
+          <<: *feature-branch-job
+          <<: *notify-success-and-fail
+
+  release-branch:
+    jobs:
+      - push-image-ecr:
+          name: push-image-ecr-qa
+          context: [aws, slack-circleci-bot]  
+          <<: *release-branch-job
+          <<: *notify-fail
+      
+      - run-tests-and-sonar-scan:
+          name: unit-test-and-sonarqube-qa
+          aws-id: "799269618777"
+          requires:
+            - push-image-ecr-qa
+          context:
+            - aws
+            - sonarqube
+            - github
+            - slack-circleci-bot
+          <<: *release-branch-job
+          <<: *notify-success-and-fail
+
+  main-workflow:
+    jobs:
+      - push-image-ecr:
+          name: push-image-ecr-main
+          context: [aws, slack-circleci-bot]  
+          <<: *main-branch-job
+          <<: *notify-fail
+
+      - run-tests-and-sonar-scan:
+          name: unit-test-and-sonarqube-main
+          aws-id: "799269618777"
+          requires:
+            - push-image-ecr-main
+          context:
+            - aws
+            - sonarqube
+            - github
+            - slack-circleci-bot
+          <<: *main-branch-job
+          <<: *notify-fail
