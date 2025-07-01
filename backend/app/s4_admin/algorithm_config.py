@@ -43,4 +43,3 @@ async def update_algorithm_config(request: Request) -> JSONResponse:
     """
     post_body = await request.body()
     return service.update_algorithm_config(post_body)
-
