@@ -34,7 +34,7 @@ async def detect_spam(request: Request):
 
         spam_filter = SpamFilterFactory.get_spam_filter(lead_type)
 
-        detection_result = spam_filter.filter(post_body_dict['lead'])
+        detection_result = spam_filter.filter(post_body_dict)
 
         MoveService.log_info(f"detection_result for {lead_type} lead={detection_result['detection_result']}")
 

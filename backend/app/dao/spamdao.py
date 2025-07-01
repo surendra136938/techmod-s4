@@ -1,6 +1,6 @@
 from app.dao.pgsqldao import PgSqlDAO
 from app.services.moveservice import MoveService
-# from app.spamfilters.spamfilter import SpamFilter
+from app.spamfilters.spamfilter import SpamFilter
 
 class SpamDAO:
     def __init__(self, db_host=None, db_user=None, db_password=None, s4_database_name=None, db_port=5432, cache_enabled=False, cache_host=None, cache_host_port=None):
